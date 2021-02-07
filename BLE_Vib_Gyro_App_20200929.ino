@@ -1,4 +1,5 @@
 #include <SoftwareSerial.h> 
+#include <string.h>
 
 #include "Wire.h"
 #include "I2Cdev.h"
@@ -21,7 +22,7 @@ uint8_t buffer_m[6];
 
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
-int16_t   mx, my, mz;
+int16_t mx, my, mz;
 
 float heading;
 float tiltheading;
@@ -55,6 +56,10 @@ float altitude;
 
 // PIN info
 int vib = A3; // Vibration Sensor input pin
+// Gyro_SCL = A5
+// Gyro_SDA = A4
+int GPS_TX = 3;
+int GPS_RX = 2;
 int BT_TX = 7;
 int BT_RX = 8;
 int redPin = 9;
@@ -82,10 +87,16 @@ void setup(){
   Serial.println("Testing device connections...");
   Serial.println(accelgyro.testConnection() ? "MPU9250 connection successful" : "MPU9250 connection failed");
   
+  // verify LED connection
   setColor(255,255,255);
   delay(2000);
+  setColor(255,0,0);
+  delay(200);
+  setColor(0,255,0);
+  delay(200);
+  setColor(0,0,255);
+  delay(200);
   setColor(0,0,0);
-  delay(1000);
 }
 
 void loop(){
@@ -123,17 +134,46 @@ void loop(){
     avg_acc = sqrt((Axyz[0])*(Axyz[0])+(Axyz[1])*(Axyz[1])+(Axyz[2])*(Axyz[2]));
     Serial.print("vector size of acceleration: ");
     Serial.println(avg_acc);
-    int scaleUp_acc;
+    long scaleUp_acc;
     scaleUp_acc = avg_acc*100;
+    long Ax=0;
+    long Ay=0;
+    long Az=0;
+    char valuelist[10];
+    long value;
+    
+    Ax = abs(Axyz[0]*100);
+    Ay = abs(Axyz[1]*100);
+    Az = abs(Axyz[2]*100);
+    //Serial.print(abs(Ax));
+    //Serial.print(abs(Ay));
+    //Serial.println(abs(Az));
+    /*
+    char ax[10] = {0} ; // Data formet
+    char ay[10] = {0} ; // Data formet
+    char az[10] = {0} ; // Data formet
+    itoa(Ax, ax, 10);
+    itoa(Ay, ay, 10);
+    itoa(Az, az, 10);
+    */
+    value = Ax*1000000;
+    delay(5);
+    value = value+Ay*1000;
+    delay(5);
+    value = value+Az;
+    
+    ltoa(value,valuelist, 10);    
+    
     Serial.print("Sending Data: ");
-    Serial.println(scaleUp_acc);
-    itoa(scaleUp_acc, data, 10);
+    Serial.println(valuelist);
+    //ltoa(valuelist, data, 10);
     LEDLevel(scaleUp_acc);
-  // Sending Data
-    BTSerial.write(data);
+    // Sending Data
+    //data = valuelist;
+    BTSerial.write(valuelist);
     BTSerial.write("\n");
 
-    delay(50);
+    delay(70);
 }
 
 
@@ -152,9 +192,9 @@ void setColor(int red, int green, int blue){
 }
 
 void LEDLevel(long val){
-  int level1 = 80;
+  int level1 = 50;
   int level2 = 100;
-  int level3 = 120;
+  int level3 = 150;
   if(val < level1) {
     setColor(0,255,0); // green
   }

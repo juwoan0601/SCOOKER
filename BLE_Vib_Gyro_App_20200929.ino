@@ -55,16 +55,15 @@ float atm;
 float altitude;
 
 // PIN info
-int vib = A3; // Vibration Sensor input pin
 // Gyro_SCL = A5
 // Gyro_SDA = A4
-int GPS_TX = 3;
-int GPS_RX = 2;
-int BT_TX = 7;
-int BT_RX = 8;
-int redPin = 9;
-int greenPin = 10;
-int bluePin = 11;
+int BT_TX = 3;
+int BT_RX = 2;
+int GPS_TX = 5;
+int GPS_RX = 6;
+int redPin = 8;
+int greenPin = 7;
+int bluePin = 4;
 
 // Bluetooth Setting
 SoftwareSerial BTSerial(BT_TX, BT_RX); // Software Serial (TX,RX) 
@@ -75,8 +74,6 @@ static long analogPinTimer = 0; // 1)
 unsigned long thisMicros_old; // 3)
 
 void setup(){
-  pinMode(vib, INPUT); //센서핀 입력
-
   Wire.begin();
   Serial.begin(38400);  // 통신속도 38400 bps
   BTSerial.begin(9600);
@@ -178,12 +175,6 @@ void loop(){
 
 
 // *******************************************************SW18090P(vibration sensor) Method ***********************************************************************************
-
-long TP_init(){
-  delay(10);
-  long measurement=pulseIn (vib, HIGH);
-  return measurement;
-}
 
 void setColor(int red, int green, int blue){
   analogWrite(redPin, 255-red);

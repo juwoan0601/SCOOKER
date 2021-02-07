@@ -125,12 +125,12 @@ void setup(){
   Wire.begin();
   Serial.begin(38400);  // 통신속도 38400 bps
   BTSerial.begin(9600);
-  Serial.println("SCOOKER Firmware v2.1.1");
-  Serial.println("Initializing I2C devices...");
+  //Serial.println("SCOOKER Firmware v2.1.1");
+  //Serial.println("Initializing I2C devices...");
   accelgyro.initialize();
   // verify connection
-  Serial.println("Testing device connections...");
-  Serial.println(accelgyro.testConnection() ? "MPU9250 connection successful" : "MPU9250 connection failed");
+  //Serial.println("Testing device connections...");
+  //Serial.println(accelgyro.testConnection() ? "MPU9250 connection successful" : "MPU9250 connection failed");
   
   // verify LED connection
   setColor(255,255,255);
@@ -146,21 +146,6 @@ void setup(){
 
 void loop(){
   char data[100] = {0} ; // Data formet
-  /*
-    // vibration Sensing Process
-    long measurement =TP_init();
-    //long measurement = analogRead(vib); 
-    delay(50);
-    vibLevel(measurement);
-    Serial.print("measurment = ");
-    Serial.print(measurement);
-    //mes_scaleDown = abs(measurement)/ 2000;
-    int mes_scaleDown;
-    mes_scaleDown = abs(measurement);
-    itoa(mes_scaleDown, data, 10);
-    Serial.print("Buffer = ");
-    Serial.println(data);
-  */
   // Gyro Sensing Process
     getAccel_Data();
     getGyro_Data();
@@ -169,32 +154,54 @@ void loop(){
     getTiltHeading();
 
   // Generating Data
-    Serial.println("Acceleration(g) of X,Y,Z:");
-    Serial.print(Axyz[0]);
-    Serial.print(",");
-    Serial.print(Axyz[1]);
-    Serial.print(",");
-    Serial.println(Axyz[2]);
-    Serial.println("Angular Velocity (Degree per sec) of X,Y,Z:");
-    Serial.print(Gxyz[0]);
-    Serial.print(",");
+    //Serial.println("Acceleration(g) of X,Y,Z:");
+    //Serial.print(Axyz[0]);
+    //Serial.print(",");
+    //Serial.print(Axyz[1]);
+    //Serial.print(",");
+    //Serial.println(Axyz[2]);
+    //Serial.print(Axyz[2]);
+    //Serial.print(",");
+    //Serial.println("Angular Velocity (Degree per sec) of X,Y,Z:");
+    //Serial.print(Gxyz[0]);
+    //Serial.print(",");
+
+
+    
     Serial.print(Gxyz[1]);
     Serial.print(",");
-    Serial.println(Gxyz[2]);
-    Serial.println("Campass (Degree) of X,Y,Z:");
-    Serial.print(Mxyz[0]);
-    Serial.print(",");
-    Serial.print(Mxyz[1]);
-    Serial.print(",");
-    Serial.println(Mxyz[2]);
+    int i;
+    int svalue = 0;
+    int numReadings = 10;
+
+    for (i = 0; i < numReadings; i++){
+    getGyro_Data();
+    svalue = svalue + Gxyz[1];
+    // 1ms pause adds more stability between reads.
+    delay(1);
+    }
+    svalue = svalue / numReadings;
+
+    Serial.println(svalue);
+  
+    //Serial.print(",");
+    //Serial.println(Gxyz[2]);
+    //Serial.println(Gxyz[2]);
+    //Serial.print(",");
+    //Serial.println("Campass (Degree) of X,Y,Z:");
+    //Serial.print(Mxyz[0]);
+    //Serial.print(",");
+    //Serial.print(Mxyz[1]);
+    //Serial.print(",");
+    //Serial.println(Mxyz[2]);
     float avg_acc;
     float avg_gyro;
     avg_acc = sqrt((Axyz[0])*(Axyz[0])+(Axyz[1])*(Axyz[1])+(Axyz[2])*(Axyz[2]));
     avg_gyro = sqrt((Gxyz[0])*(Gxyz[0])+(Gxyz[1])*(Gxyz[1])+(Gxyz[2])*(Gxyz[2]));
-    Serial.print("vector size of acceleration: ");
-    Serial.println(avg_acc);
-    Serial.print("vector size of Angular Velocity: ");
-    Serial.println(avg_gyro);
+    //Serial.print("vector size of acceleration: ");
+    //Serial.println(avg_acc);
+    //Serial.print("vector size of Angular Velocity: ");
+    //Serial.println(avg_gyro);
     long scaleUp_acc;
     scaleUp_acc = avg_acc*100;
     long Ax=0;
@@ -209,14 +216,6 @@ void loop(){
     //Serial.print(abs(Ax));
     //Serial.print(abs(Ay));
     //Serial.println(abs(Az));
-    /*
-    char ax[10] = {0} ; // Data formet
-    char ay[10] = {0} ; // Data formet
-    char az[10] = {0} ; // Data formet
-    itoa(Ax, ax, 10);
-    itoa(Ay, ay, 10);
-    itoa(Az, az, 10);
-    */
     value = Ax*1000000;
     delay(5);
     value = value+Ay*1000;
@@ -225,8 +224,8 @@ void loop(){
     
     ltoa(value,valuelist, 10);    
     
-    Serial.print("Sending Data: ");
-    Serial.println(valuelist);
+    //Serial.print("Sending Data: ");
+    //Serial.println(valuelist);
     //ltoa(valuelist, data, 10);
     LEDLevel(scaleUp_acc);
     // Sending Data
@@ -234,7 +233,7 @@ void loop(){
     BTSerial.write(valuelist);
     BTSerial.write("\n");
 
-    delay(70);
+    //delay(70);
 }
 
 

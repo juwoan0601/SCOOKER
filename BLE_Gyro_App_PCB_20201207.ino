@@ -6,10 +6,6 @@
 // When you turn on the Device, it will be automatically Calibration about least 2 min.
 // So, Release the device on the flat place.
 // Written by GMObean
-
-
-// v2.4.0 Add Calculate linear velocity function
-// v2.5.0 Sending Firmware version to application.
 //*========================================
 
 #include <SoftwareSerial.h> 
@@ -26,7 +22,6 @@
 MPU9250 accelgyro;
 I2Cdev   I2C_M;
 
-char FWversion[10] = "v2.5.0";
 void get_one_sample_date_mxyz();
 void getAccel_Data(void);
 void getGyro_Data(void);
@@ -131,35 +126,19 @@ void setup(){
   Wire.begin();
   Serial.begin(38400);  // 통신속도 38400 bps
   BTSerial.begin(9600);
+  char FWversion[10] = "v2.3.2";
+  BTSerial.write(FWversion);
+  BTSerial.write('\n');
 
-delay(500);
-  }
   //Firmware Info
   Serial.print("SCOOKER Firmware| ");
   Serial.println(FWversion);
-  
-  //Mxyz_init_calibrated();
+  Mxyz_init_calibrated();
   Serial.println("Initializing I2C devices...");
   accelgyro.initialize();
   // verify connection
   Serial.println("Testing device connections...");
   Serial.println(accelgyro.testConnection() ? "MPU9250 connection successful" : "MPU9250 connection failed");
-
-  // Verify Bluetooth connection
-  Serial.println("[Security Check] Waiting Application...");
-  
-  while(!BTSerial.find("callfwv")){
-      if (BTSerial.available())
-        Serial.write(BTSerial.read());
-      if (Serial.available())
-        BTSerial.write(Serial.read());
-  };
-
-  // For the response, send firmware version
-  int i=0;
-  for(i=0; i<10; i++){
-    BTSerial.write(FWversion);
-    BTSerial.write('\n');
 
   /*
   // verify LED connection
@@ -181,12 +160,14 @@ void loop(){
     getAccel_Data();
     getGyro_Data();
     getCompassDate_calibrated(); // compass data has been calibrated here
+    /*
     getHeading();               //before we use this function we should run 'getCompassDate_calibrated()' frist, so that we can get calibrated data ,then we can get correct angle .
     getTiltHeading();
     //Serial.print("Heading Value: ");
     Serial.print(heading);
     Serial.print(',');
     Serial.println(tiltheading);
+    */
 
   // Generating Data
 

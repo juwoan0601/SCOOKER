@@ -7,8 +7,9 @@
 // So, Release the device on the flat place.
 // Written by GMObean
 
-//v2.4.0 Add Calculate linear velocity function
 
+// v2.4.0 Add Calculate linear velocity function
+// v2.5.0 Sending Firmware version to application.
 //*========================================
 
 #include <SoftwareSerial.h> 
@@ -25,6 +26,7 @@
 MPU9250 accelgyro;
 I2Cdev   I2C_M;
 
+char FWversion[10] = "v2.5.0";
 void get_one_sample_date_mxyz();
 void getAccel_Data(void);
 void getGyro_Data(void);
@@ -117,14 +119,6 @@ int bluePin = 4;
  */
 int Accel_scale = 16;
 
-// Calculate Linear velocity
-float b_Axyz[3] = {0.0};
-float velocity[3] = {0.0};
-float currAccel[3] = {0.0};
-float prevAccel[3] = {0.0};
-unsigned long prevTime = millis();
-unsigned long currTime;
-
 // Bluetooth Setting
 SoftwareSerial BTSerial(BT_TX, BT_RX); // Software Serial (TX,RX) 
 
@@ -137,20 +131,36 @@ void setup(){
   Wire.begin();
   Serial.begin(38400);  // 통신속도 38400 bps
   BTSerial.begin(9600);
-  char FWversion[10] = "v2.4.0";
-  BTSerial.write(FWversion);
-  BTSerial.write('\n');
+
+delay(500);
+  }
   //Firmware Info
   Serial.print("SCOOKER Firmware| ");
   Serial.println(FWversion);
+  
+  //Mxyz_init_calibrated();
   Serial.println("Initializing I2C devices...");
   accelgyro.initialize();
   // verify connection
   Serial.println("Testing device connections...");
   Serial.println(accelgyro.testConnection() ? "MPU9250 connection successful" : "MPU9250 connection failed");
-  Axyz_init_calibrated(); // Accelerometer data has been calibrated here
-  //Mxyz_init_calibrated(); // Magnetometer data has been calibrated here
+
+  // Verify Bluetooth connection
+  Serial.println("[Security Check] Waiting Application...");
   
+  while(!BTSerial.find("callfwv")){
+      if (BTSerial.available())
+        Serial.write(BTSerial.read());
+      if (Serial.available())
+        BTSerial.write(Serial.read());
+  };
+
+  // For the response, send firmware version
+  int i=0;
+  for(i=0; i<10; i++){
+    BTSerial.write(FWversion);
+    BTSerial.write('\n');
+
   /*
   // verify LED connection
   setColor(255,255,255);
@@ -166,6 +176,7 @@ void setup(){
 }
 
 void loop(){
+  char data[100] = {0} ; // Data formet
   // Gyro Sensing Process
     getAccel_Data();
     getGyro_Data();
@@ -173,9 +184,9 @@ void loop(){
     getHeading();               //before we use this function we should run 'getCompassDate_calibrated()' frist, so that we can get calibrated data ,then we can get correct angle .
     getTiltHeading();
     //Serial.print("Heading Value: ");
-    //Serial.print(heading);
-    //Serial.print(',');
-    //Serial.println(tiltheading);
+    Serial.print(heading);
+    Serial.print(',');
+    Serial.println(tiltheading);
 
   // Generating Data
 
@@ -297,38 +308,8 @@ void loop(){
 
     BTSerial.write(valuelist);
     BTSerial.write('\n');
-    delay(1);
 
-    // Calculate linear velocity
-    currTime = millis();
-    for(i = 0; i < 3; i++){
-      currAccel[i]= (Axyz[i]-b_Axyz[i])*9.81;
-      if(currAccel[i] < 0.1) currAccel[i]=0;
-      velocity[i] += (currAccel[i] + prevAccel[i])/2*(currTime - prevTime)/1000; //1000 added to get the same units
-      prevAccel[i] = currAccel[i];
-    }
-    prevTime = currTime;
-    /*
-    Serial.print(Axyz[0]);
-    Serial.print(',');
-    Serial.print(Axyz[1]);
-    Serial.print(',');
-    Serial.print(Axyz[2]);
-    Serial.println(',');
-    */
-    
-    for(i=0; i<3; i++){
-      Serial.print(velocity[i]);
-      Serial.print(',');
-    }
-    
-    for(i=0; i<3; i++){
-      Serial.print(Axyz[i]-b_Axyz[i]);
-      Serial.print(',');
-    }
-    Serial.print('\n');
-    
-    delay(1);
+    delay(5);
 }
 
 
@@ -371,37 +352,6 @@ void getTiltHeading(void)
     tiltheading = 180 * atan2(yh, xh) / PI;
     if (yh < 0)    tiltheading += 360;
 }
-void Axyz_init_calibrated ()
-{
-  Serial.println("Calibration Accelometer. Please put the device on an FLAT SURFACE for 10 sec");
-  delay(500);
-  int i = 0;
-  int j = 0;
-  int n = 20; // data sampling number 
-  float temp[3] = {0};
-  for(i=0; i < n; i++){
-    getAccel_Data();
-    for(j=0; j<3; j++){
-      Serial.print(Axyz[j]);
-      Serial.print(',');
-    }
-    Serial.print('\n');
-    for(j=0; j < 3; j++){
-      temp[j]+= Axyz[j]; 
-    }
-  }
-  for(i=0; i < 3; i++){
-      b_Axyz[i] = temp[i]/n;
-  }
-
-  Serial.print ("Accelerometer Calibration value: ");
-  for(i=0; i<3; i++){
-      Serial.print(b_Axyz[i]);
-      Serial.print(',');
-  }
-  Serial.print('\n');
-}
-
 void Mxyz_init_calibrated ()
 {
 
